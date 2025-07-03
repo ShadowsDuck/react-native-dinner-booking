@@ -36,12 +36,12 @@ export default function Index() {
 
             <View className="flex flex-row justify-center items-center">
               <Text className="text-white font-semibold">
-                Already a User?{" "}
+                Have an account?{" "}
               </Text>
 
               <TouchableOpacity onPress={() => router.push("/signin")}>
-                <Text className="text-[#f49b33] font-semibold text-base underline">
-                  Sign In
+                <Text className="text-[#f49b33] font-semibold text-base">
+                  SIGN IN
                 </Text>
               </TouchableOpacity>
             </View>
