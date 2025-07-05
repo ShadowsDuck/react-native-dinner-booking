@@ -308,3 +308,4 @@ const slots = [
 ];
 
 export { carouselImages, restaurants, slots };
+

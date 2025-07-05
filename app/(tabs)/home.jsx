@@ -1,11 +1,15 @@
 import { BlurView } from 'expo-blur';
+import { collection, getDocs, query } from 'firebase/firestore';
+import { useEffect, useState } from 'react';
 import { ActivityIndicator, FlatList, Image, ImageBackground, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import logo from "../../assets/images/dinetimelogo.png";
 import banner from "../../assets/images/homeBanner.png";
-import { restaurants } from "../../store/restaurants";
+import { db } from "../../config/firebaseConfig";
 
-const home = () => {
+const Home = () => {
+    const [restaurants, setRestaurants] = useState([]);
+
     const renderItem = ({ item }) => (
         <TouchableOpacity className="bg-[#5f5f5f] max-h-80 max-w-xs flex justify-center rounded-lg shadow-md p-4 mx-4">
             <Image
@@ -18,6 +22,17 @@ const home = () => {
             <Text className="text-base text-white mb-2">Open: {item.opening} - Close: {item.closing}</Text>
         </TouchableOpacity>
     );
+
+    const getRestaurants = async () => {
+        const q = query(collection(db, "restaurants"));
+        const res = await getDocs(q);
+
+        const data = res.docs.map(doc => doc.data());
+        setRestaurants(data);
+    };
+    useEffect(() => {
+        getRestaurants();
+    }, []);
 
     return (
         <SafeAreaView style={{ backgroundColor: "#2b2b2b", paddingBottom: 50 }}>
@@ -81,4 +96,4 @@ const home = () => {
         </SafeAreaView>
     )
 }
-export default home
+export default Home
