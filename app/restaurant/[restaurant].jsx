@@ -2,8 +2,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Dimensions, FlatList, Image, ScrollView, Text, View } from 'react-native';
+import { Dimensions, FlatList, Image, Linking, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import DatePicker from '../../components/restaurant/DatePicker';
+import FindSlots from '../../components/restaurant/FindSlots';
+import GuestPicker from '../../components/restaurant/GuestPicker';
 import { db } from '../../config/firebaseConfig';
 const Restaurant = () => {
     const { restaurant } = useLocalSearchParams();
@@ -14,6 +17,10 @@ const Restaurant = () => {
     const [carouselData, setCarouselData] = useState([]);
     const [slotsData, setSlotsData] = useState([]);
     const [currentIndex, setCurrentIndex] = useState(0);
+
+    const [date, setDate] = useState(new Date());
+    const [selectedNumber, setSelectedNumber] = useState(2);
+    const [selectedSlot, setSelectedSlot] = useState(null);
 
     const handleNextImage = () => {
         const carouselLength = carouselData[0]?.images.length;
@@ -41,6 +48,16 @@ const Restaurant = () => {
             const lastIndex = carouselLength - 1;
             setCurrentIndex(lastIndex);
             flatListRef.current.scrollToIndex({ index: lastIndex, animated: true });
+        }
+    }
+
+    const handleLocation = async () => {
+        const url = 'https://maps.app.goo.gl/x3fawNhFHyeUC8y39'
+        const supported = await Linking.canOpenURL(url);
+        if (supported) {
+            await Linking.openURL(url);
+        } else {
+            console.log("Don't know how to open URI: " + url);
         }
     }
 
@@ -152,6 +169,61 @@ const Restaurant = () => {
                         scrollEnabled={false}
                         showsHorizontalScrollIndicator={false}
                         style={{ borderRadius: 25 }}
+                    />
+                </View>
+                <View className="flex-1 flex-row mt-2 p-2">
+                    <Ionicons
+                        onPress={handleNextImage}
+                        name="location-sharp"
+                        size={24}
+                        color="#f49b33" />
+                    <Text className="max-w-[75%] text-white font-semibold text-lg ml-2">
+                        {restaurantData?.address} | {" "}
+                        <Text
+                            onPress={handleLocation}
+                            className="flex items-center text-[#f49b33] font-semibold underline italic text-lg">
+                            Get Directions
+                        </Text>
+                    </Text>
+                </View>
+                <View className="flex-1 flex-row p-2">
+                    <Ionicons
+                        onPress={handleNextImage}
+                        name="time"
+                        size={20}
+                        color="#f49b33" />
+                    <Text className="max-w-[75%] text-white text-lg ml-2">
+                        {restaurantData?.opening} - {restaurantData?.closing}
+                    </Text>
+                </View>
+                <View className="flex-1 border m-2 p-2 border-[#f49b33] rounded-lg">
+                    <View className="flex-1 flex-row p-4 justify-end items-center">
+                        <View className="flex-1 flex-row">
+                            <Ionicons name="calendar" size={20} color="#f49b33" />
+                            <Text className="text-white ml-2 text-lg">
+                                Select booking date
+                            </Text>
+                        </View>
+                        <DatePicker date={date} setDate={setDate} />
+                    </View>
+                    <View className="flex-1 flex-row p-3 justify-end items-center bg-[#474747] rounded-lg mb-4 ml-[6px] mr-3">
+                        <View className="flex-1 flex-row">
+                            <Ionicons name="people" size={20} color="#f49b33" />
+                            <Text className="text-white ml-2 text-lg ">
+                                Select number of guests
+                            </Text>
+                        </View>
+                        <GuestPicker selectedNumber={selectedNumber} setSelectedNumber={setSelectedNumber} />
+                    </View>
+                </View>
+                <View className="flex-1">
+                    <FindSlots
+                        restaurant={restaurant}
+                        date={date}
+                        selectedNumber={selectedNumber}
+                        slots={slotsData}
+                        selectedSlot={selectedSlot}
+                        setSelectedSlot={setSelectedSlot}
                     />
                 </View>
             </ScrollView>
