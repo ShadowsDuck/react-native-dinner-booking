@@ -12,6 +12,10 @@ const Home = () => {
     const router = useRouter();
     const [restaurants, setRestaurants] = useState([]);
 
+    // const temp = async () => {
+    //     return await AsyncStorage.getItem("userEmail");
+    // }
+
     const renderItem = ({ item }) => (
         <TouchableOpacity onPress={() => router.push(`/restaurant/${item.name}`)} className="bg-[#5f5f5f] max-h-80 max-w-xs flex justify-center rounded-lg shadow-md p-4 mx-4">
             <Image
@@ -34,6 +38,7 @@ const Home = () => {
     };
     useEffect(() => {
         getRestaurants();
+        // temp();
     }, []);
 
     return (

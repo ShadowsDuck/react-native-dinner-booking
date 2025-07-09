@@ -1,11 +1,14 @@
 import { yupResolver } from "@hookform/resolvers/yup";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
+import { createUserWithEmailAndPassword, getAuth } from "firebase/auth";
+import { doc, getFirestore, setDoc } from "firebase/firestore";
 import { Controller, useForm } from "react-hook-form";
-import { Image, ScrollView, StatusBar, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Alert, Image, ScrollView, StatusBar, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import logo from "../../assets/images/dinetimelogo.png";
 import entryImg from "../../assets/images/Frame.png";
-import validationSchema from "../../utils/authSchema";
+import signupSchema from "../../utils/authSignupSchema";
 
 const Signup = () => {
     const router = useRouter();
@@ -15,13 +18,48 @@ const Signup = () => {
         handleSubmit,
         formState: { errors },
     } = useForm({
-        resolver: yupResolver(validationSchema),
+        resolver: yupResolver(signupSchema),
     });
 
+    const auth = getAuth();
+    const db = getFirestore();
+    const handleSignup = async (data) => {
+        try {
+            const userCredentials = await createUserWithEmailAndPassword(
+                auth,
+                data.email,
+                data.password
+            )
+            const user = userCredentials.user;
+
+            await setDoc(doc(db, "users", user.uid), {
+                email: data.email,
+                createdAt: new Date().toISOString(),
+            });
+            await AsyncStorage.setItem("userEmail", data.email);
+            router.push("/home");
+        } catch (error) {
+            if (error.code === "auth/email-already-in-use") {
+                Alert.alert(
+                    "Signup Failed!!",
+                    "Email already in use. Please try another email.",
+                    [{ text: "OK" }]
+                );
+            } else {
+                Alert.alert(
+                    "Signup Error!!",
+                    "An error occurred during signup. Please try again later.",
+                    [{ text: "OK" }]
+                );
+            }
+        }
+    }
+
     const onSubmit = (data) => {
-        console.log("Signup data", data);
-        // handleSignup(data)
+        // console.log("Signup data", data);
+        handleSignup(data)
     };
+
     return (
         <SafeAreaView className={"bg-[#2b2b2b]"}>
             <ScrollView contentContainerStyle={{ height: "100%" }}>

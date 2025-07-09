@@ -1,11 +1,14 @@
 import { yupResolver } from "@hookform/resolvers/yup";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
+import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import { doc, getDoc, getFirestore } from "firebase/firestore";
 import { Controller, useForm } from "react-hook-form";
-import { Image, ScrollView, StatusBar, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Alert, Image, ScrollView, StatusBar, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import logo from "../../assets/images/dinetimelogo.png";
 import entryImg from "../../assets/images/Frame.png";
-import validationSchema from "../../utils/authSchema";
+import signinSchema from "../../utils/authSigninSchema";
 
 const Signin = () => {
     const router = useRouter();
@@ -15,13 +18,49 @@ const Signin = () => {
         handleSubmit,
         formState: { errors },
     } = useForm({
-        resolver: yupResolver(validationSchema),
+        resolver: yupResolver(signinSchema),
     });
 
+    const auth = getAuth();
+    const db = getFirestore();
+    const handleSignin = async (data) => {
+        try {
+            const userCredentials = await signInWithEmailAndPassword(
+                auth,
+                data.email,
+                data.password
+            )
+            const user = userCredentials.user;
+
+            const userDoc = await getDoc(doc(db, "users", user.uid));
+            if (userDoc.exists()) {
+                console.log("User already exists in Firestore", userDoc.data());
+                await AsyncStorage.setItem("userEmail", data.email);
+                router.push("/home");
+            } else {
+                console.log("No such Doc");
+            }
+        } catch (error) {
+            if (error.code === "auth/invalid-credential") {
+                Alert.alert(
+                    "Signin Failed!!",
+                    "Incorrect credentials. Please try again.",
+                    [{ text: "OK" }]
+                );
+            } else {
+                Alert.alert(
+                    "Signin Error!!",
+                    "An error occurred during signin. Please try again later.",
+                    [{ text: "OK" }]
+                );
+            }
+        }
+    }
+
     const onSubmit = (data) => {
-        console.log("Signin data", data);
-        // handleSignin(data)
+        handleSignin(data)
     };
+
     return (
         <SafeAreaView className={"bg-[#2b2b2b]"}>
             <ScrollView contentContainerStyle={{ height: "100%" }}>
@@ -105,4 +144,5 @@ const Signin = () => {
         </SafeAreaView>
     )
 }
+
 export default Signin
