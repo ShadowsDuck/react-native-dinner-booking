@@ -1,8 +1,12 @@
+import { Ionicons } from "@expo/vector-icons";
+import { yupResolver } from "@hookform/resolvers/yup";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { addDoc, collection } from "firebase/firestore";
 import { useState } from "react";
-import { Text, TouchableOpacity, View } from "react-native";
+import { useForm } from "react-hook-form";
+import { Modal, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { db } from "../../config/firebaseConfig";
+import guestFormSchema from "../../utils/guestFormSchema";
 
 const FindSlots = ({
     date,
@@ -13,6 +17,21 @@ const FindSlots = ({
     restaurant,
 }) => {
     const [slotsVisible, setSlotsVisible] = useState(false);
+    const [modalVisible, setModalVisible] = useState(false);
+    const [formVisible, setFormVisible] = useState(false);
+
+    const {
+        register,
+        handleSubmit,
+        setValue,
+        formState: { errors },
+    } = useForm({
+        resolver: yupResolver(guestFormSchema),
+        defaultValues: {
+            fullName: "",
+            phoneNumber: "",
+        },
+    });
 
     const handlePress = () => {
         setSlotsVisible(!slotsVisible);
@@ -29,6 +48,7 @@ const FindSlots = ({
 
     const handleBooking = async () => {
         const userEmail = await AsyncStorage.getItem("userEmail");
+        const guestStatus = await AsyncStorage.getItem("isGuest");
 
         if (userEmail) {
             try {
@@ -43,9 +63,28 @@ const FindSlots = ({
             } catch (error) {
                 console.error("Error booking slot:", error);
             }
+        } else if (guestStatus === "true") {
+            setFormVisible(true);
+            setModalVisible(true);
         }
-
     }
+
+    const handleFormSubmit = async (values) => {
+        try {
+            await addDoc(collection(db, "bookings"), {
+                ...values,
+                slot: selectedSlot,
+                date: date.toISOString(),
+                guests: selectedNumber,
+                restaurant: restaurant,
+            });
+
+            alert("Booking successfully Done!");
+            setModalVisible(false);
+        } catch (error) {
+            console.log(error);
+        }
+    };
 
     return (
         <View className="flex-1">
@@ -83,6 +122,59 @@ const FindSlots = ({
                     ))}
                 </View>
             )}
+
+            <Modal
+                visible={modalVisible}
+                transparent={true}
+                animationType="slide"
+            >
+                <View className="flex-1 bg-[#00000080] justify-end">
+                    <View className="bg-[#474747] mx-4 rounded-t-lg p-4 pb-6">
+                        {formVisible && (
+                            <View className="w-full">
+                                <Ionicons
+                                    name="close-sharp"
+                                    size={30}
+                                    color={"#f49b33"}
+                                    onPress={() => setModalVisible(false)}
+                                />
+                                <Text className="text-[#f49b33] mt-4 mb-2">Name</Text>
+                                <TextInput
+                                    className="h-10 border border-white text-white rounded px-2"
+                                    onChangeText={(text) => setValue("fullName", text)}
+                                    {...register("fullName")}
+                                />
+                                {errors.fullName && (
+                                    <Text className="text-red-500 text-xs mb-2">
+                                        {errors.fullName.message}
+                                    </Text>
+                                )}
+
+                                <Text className="text-[#f49b33] mt-4 mb-2">Phone Number</Text>
+                                <TextInput
+                                    className="h-10 border border-white text-white rounded px-2"
+                                    onChangeText={(text) => setValue("phoneNumber", text)}
+                                    {...register("phoneNumber")}
+                                />
+                                {errors.phoneNumber && (
+                                    <Text className="text-red-500 text-xs mb-2">
+                                        {errors.phoneNumber.message}
+                                    </Text>
+                                )}
+
+                                <TouchableOpacity
+                                    onPress={handleSubmit(handleFormSubmit)}
+                                    className="p-2 my-2 bg-[#f49b33] text-black rounded-lg mt-10"
+                                >
+                                    <Text className="text-lg font-semibold text-center">
+                                        Submit
+                                    </Text>
+                                </TouchableOpacity>
+                            </View>
+                        )}
+                    </View>
+                </View>
+            </Modal>
         </View>
     );
 };

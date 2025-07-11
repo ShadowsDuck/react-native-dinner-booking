@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BlurView } from 'expo-blur';
 import { useRouter } from 'expo-router';
 import { collection, getDocs, query } from 'firebase/firestore';
@@ -12,9 +13,11 @@ const Home = () => {
     const router = useRouter();
     const [restaurants, setRestaurants] = useState([]);
 
-    // const temp = async () => {
-    //     return await AsyncStorage.getItem("userEmail");
-    // }
+    const temp = async () => {
+        const value = await AsyncStorage.getItem("isGuest");
+        const email = await AsyncStorage.getItem("userEmail");
+        console.log(value, email);
+    };
 
     const renderItem = ({ item }) => (
         <TouchableOpacity onPress={() => router.push(`/restaurant/${item.name}`)} className="bg-[#5f5f5f] max-h-80 max-w-xs flex justify-center rounded-lg shadow-md p-4 mx-4">
@@ -38,7 +41,7 @@ const Home = () => {
     };
     useEffect(() => {
         getRestaurants();
-        // temp();
+        temp();
     }, []);
 
     return (
