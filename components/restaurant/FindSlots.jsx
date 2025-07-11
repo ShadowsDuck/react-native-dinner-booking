@@ -1,5 +1,8 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { addDoc, collection } from "firebase/firestore";
 import { useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
+import { db } from "../../config/firebaseConfig";
 
 const FindSlots = ({
     date,
@@ -24,6 +27,26 @@ const FindSlots = ({
         }
     };
 
+    const handleBooking = async () => {
+        const userEmail = await AsyncStorage.getItem("userEmail");
+
+        if (userEmail) {
+            try {
+                await addDoc(collection(db, "bookings"), {
+                    email: userEmail,
+                    slot: selectedSlot,
+                    date: date.toISOString(),
+                    guests: selectedNumber,
+                    restaurant: restaurant,
+                })
+                alert("Slot booked successfully!");
+            } catch (error) {
+                console.error("Error booking slot:", error);
+            }
+        }
+
+    }
+
     return (
         <View className="flex-1">
             <View className={`flex ${selectedSlot != null && "flex-row"} `}>
@@ -36,7 +59,7 @@ const FindSlots = ({
                 </View>
                 {selectedSlot != null && (
                     <View className="flex-1">
-                        <TouchableOpacity>
+                        <TouchableOpacity onPress={handleBooking}>
                             <Text className="text-center text-white text-lg font-semibold bg-[#f49b33] p-2 my-3 mx-2 rounded-lg">
                                 Book Slot
                             </Text>
