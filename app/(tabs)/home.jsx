@@ -45,7 +45,7 @@ const Home = () => {
         <SafeAreaView style={{ backgroundColor: "#2b2b2b", paddingBottom: 50 }}>
             <View className="flex items-center">
                 <View className="bg-[#5f5f5f] w-11/12 rounded-lg shadow-lg 
-                justify-between items-center f;ex flex-row p-2">
+                justify-between items-center flex flex-row p-2">
                     <View className="flex flex-row">
                         <Text className="text-base text-white h-10 pt-[5] align-middle">Welcome To{" "}</Text>
                         <Image source={logo} className={"w-20 h-12"} resizeMode='cover' />
